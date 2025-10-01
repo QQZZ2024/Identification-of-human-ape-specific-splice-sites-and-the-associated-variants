@@ -182,3 +182,14 @@ h<-pin4[which(pin4$lab=="human_nochimp_norhesus_nomouse"),1:4]
 inter<-pin4[which(pin4$lab=="human_chimp_norhesus_nomouse"),1:4]
 write.table(h,"/home/specific/human_specific.txt",sep="\t",quote=F,row.names=F,col.names=F)
 write.table(inter,"/home/specific/ape_specific.txt",sep="\t",quote=F,row.names=F,col.names=F)
+
+#####################################################
+
+###Pipeline for filtering species-specific splice sites
+num=$(cat /home/id/humanid.txt)
+for ID in $num
+do
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$13=a[$1,$2];print}' /home/specific/human_specific.txt /home/junction/${ID}_human_donor_gene.bed | tr ' ' '\t' | awk -F "\t" '{if($13!=""){print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}}' | sort | uniq > /home/specific/${ID}_human_donor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$13=a[$1,$2];print}'/home/specific/human_specific.txt /home/junction/${ID}_human_acceptor_gene.bed | tr ' ' '\t' | awk -F "\t" '{if($13!=""){print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}}' | sort | uniq > /home/specific/${ID}_human_acceptor.bed
+done
+#Read coverage (The number of junction reads ≥3)
