@@ -186,10 +186,206 @@ write.table(inter,"/home/specific/ape_specific.txt",sep="\t",quote=F,row.names=F
 #####################################################
 
 ###Pipeline for filtering species-specific splice sites
+#One side of the jucntion reads is annotated
 num=$(cat /home/id/humanid.txt)
 for ID in $num
 do
-awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$13=a[$1,$2];print}' /home/specific/human_specific.txt /home/junction/${ID}_human_donor_gene.bed | tr ' ' '\t' | awk -F "\t" '{if($13!=""){print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}}' | sort | uniq > /home/specific/${ID}_human_donor.bed
-awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$13=a[$1,$2];print}'/home/specific/human_specific.txt /home/junction/${ID}_human_acceptor_gene.bed | tr ' ' '\t' | awk -F "\t" '{if($13!=""){print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}}' | sort | uniq > /home/specific/${ID}_human_acceptor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$7=a[$2,$4];print}' /home/specific/human_specific.txt /home/junction/${ID}_human.bed | tr ' ' '\t' | awk -F "\t" '{if($7!=""){print $2"\t"$4"\t"$5}}' | sort | uniq > /home/filter/tmp/${ID}_human_donor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$7=a[$2,$5];print}' /home/specific/human_specific.txt /home/junction/${ID}_human.bed | tr ' ' '\t' | awk -F "\t" '{if($7!=""){print $2"\t"$4"\t"$5}}' | sort | uniq > /home/filter/tmp/${ID}_human_acceptor.bed
 done
-#Read coverage (The number of junction reads ≥3)
+
+cat /home/filter/tmp/*_human_donor.bed | sort | uniq > /home/filter/tmp/allhuman_donor.bed
+cat /home/filter/tmp/*_human_acceptor.bed | sort | uniq > /home/filter/tmp/allhuman_acceptor.bed
+
+library(dplyr)
+library(tidyr)
+gtf<-read.table("/home/genome/hg38.gtf",header = F,sep="\t",quote = "",fill = T)
+qian<-read.table("/home/filter/tmp/allhuman_donor.bed",header = F,sep="\t",quote = "",fill = T)
+pin<-left_join(qian,gtf,by=c("V1"="V1","V3"="V3"))
+pin<-pin[,c(1,2,3,6)]
+index<-duplicated(pin)
+pin<-pin[!index,]
+qian<-na.omit(pin)
+pin<-NULL
+for(i in 1:nrow(qian)){
+res1<-gtf[which(qian[i,1] == gtf[,1] & qian[i,2] >= gtf[,3] & qian[i,2] <= gtf[,4]),6]
+res2<-gtf[which(qian[i,1] == gtf[,1] & qian[i,3] >= gtf[,3] & qian[i,3] <= gtf[,4]),6]
+res<-intersect(res1,res2)
+if(length(res)>0){
+pin<-rbind(qian[i,],pin)
+}
+print(i)
+}
+qian<-pin
+qian$id<-paste(qian[,1],qian[,2],sep="_")
+id<-paste(qian[,1],qian[,2],sep="_")
+index<-duplicated(id)
+id<-id[!index]
+for(i in 1:length(id)){
+res<-qian[which(qian$id==id[i]),4]
+index<-duplicated(res)
+res<-res[!index]
+if(length(res)>1){
+print(i)
+}
+}
+hou<-read.table("/home/filter/tmp/allhuman_acceptor.bed",header = F,sep="\t",quote = "",fill = T)
+pin<-left_join(hou,gtf,by=c("V1"="V1","V2"="V4"))
+pin<-pin[,c(1,2,3,6)]
+index<-duplicated(pin)
+pin<-pin[!index,]
+hou<-na.omit(pin)
+pin<-NULL
+for(i in 1:nrow(hou)){
+res1<-gtf[which(hou[i,1] == gtf[,1] & hou[i,2] >= gtf[,3] & hou[i,2] <= gtf[,4]),6]
+res2<-gtf[which(hou[i,1] == gtf[,1] & hou[i,3] >= gtf[,3] & hou[i,3] <= gtf[,4]),6]
+res<-intersect(res1,res2)
+if(length(res)>0){
+pin<-rbind(hou[i,],pin)
+}
+print(i)
+}
+hou<-pin
+hou$id<-paste(hou[,1],hou[,3],sep="_")
+id<-paste(hou[,1],hou[,3],sep="_")
+index<-duplicated(id)
+id<-id[!index]
+for(i in 1:length(id)){
+res<-hou[which(hou$id==id[i]),4]
+index<-duplicated(res)
+res<-res[!index]
+if(length(res)>1){
+print(i)
+}
+}
+hou<-hou[,c(1,3,4)]
+write.table(qian,"/home/filter/tmp/allhuman_donor2.bed",sep="\t",quote=F,row.names=F,col.names=F)
+write.table(hou,"/home/filter/tmp/allhuman_acceptor2.bed",sep="\t",quote=F,row.names=F,col.names=F)
+
+num=$(cat /home/id/humanid.txt)
+for ID in $num
+do
+awk -F "\t" 'NR==FNR{a[$1,$2,$3]=$0;next}{$13=a[$1,$2,$3];print}' /home/filter/tmp/allhuman_donor2.bed /home/filter/tmp/${ID}_human_donor.bed | tr ' ' '\t' | awk '$13!=""'  | awk -F "\t" '{print $13"\t"$14"\t"$15"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}' > /home/filter/first/${ID}_human_donor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2,$3]=$0;next}{$13=a[$1,$2,$3];print}' /home/filter/tmp/allhuman_acceptor2.bed /home/filter/tmp/${ID}_human_acceptor.bed | tr ' ' '\t' | awk '$13!=""'  | awk -F "\t" '{print $13"\t"$14"\t"$15"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}' > /home/filter/first/${ID}_human_acceptor.bed
+done
+
+#Read coverage (The number of junction reads ≥3) & Read quality (Overhang ≥5 bp)
+num=$(cat /home/id/humanid.txt)
+for ID in $num
+do
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$7=a[$2,$4];print}' /home/filter/first/${ID}_human_donor.bed /home/junction/${ID}_human.bed | tr ' ' '\t' | awk -F "\t" '{if($7!=""){print $0"\t"$4-$3+1"\t"$6-$5+1}}' | awk -F "\t" '{if($9>4 && $10>4) print $1"\t"$2"\t"$4}' | awk -F "\t" '{count[$2"\t"$3]++}{print$0"\t"count[$2"\t"$3]}' | awk -F "\t" '{if($4>2){print$2"\t"$3}}' | sort | uniq > /home/filter/tmp/${ID}_human_donor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$7=a[$2,$5];print}' /home/filter/first/${ID}_human_acceptor.bed /home/junction/${ID}_human.bed | tr ' ' '\t' | awk -F "\t" '{if($7!=""){print $0"\t"$4-$3+1"\t"$6-$5+1}}' | awk -F "\t" '{if($9>4 && $10>4) print $1"\t"$2"\t"$5}' | awk -F "\t" '{count[$2"\t"$3]++}{print$0"\t"count[$2"\t"$3]}' | awk -F "\t" '{if($4>2){print$2"\t"$3}}' | sort | uniq > /home/filter/tmp/${ID}_human_acceptor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$13=a[$1,$2];print}' /home/filter/tmp/${ID}_human_donor.bed /home/filter/first/${ID}_human_donor.bed | tr ' ' '\t' | awk -F "\t" '{if($13!=""){print$1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}}' > /home/filter/second/${ID}_human_donor.bed
+awk -F "\t" 'NR==FNR{a[$1,$2]=$0;next}{$13=a[$1,$2];print}' /home/filter/tmp/${ID}_human_acceptor.bed /home/filter/first/${ID}_human_acceptor.bed | tr ' ' '\t' | awk -F "\t" '{if($13!=""){print$1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12}}' > /home/filter/second/${ID}_human_acceptor.bed
+done
+
+#Observed in over half of the samples in a tissue
+num=$(cat /home/id/humanid.txt)
+for ID in $num
+do
+cat <(cat /home/junction/${ID}_human.bed | awk -F "\t" '{print$2"\t"$4}') <(cat /home/junction/${ID}_human.bed | awk -F "\t" '{print$2"\t"$5}') | sort | uniq | awk -F "\t" '{print$0"\t"$1"_"$2"_"$3}' > /home/junction/${ID}_human_splice.bed
+done
+cat /home/filter/second/${ID}_human_donor.bed | awk -F "\t" '{print$1"_"$2"_"$3}' | sort | uniq > /home/filter/tmp/human.txt
+cat /home/filter/tmp/human.txt  | while read line1
+do
+cc_h=`awk -F "\t" '{print$1"_human_splice.bed"}' /home/id/cerebellar_cortex_id.bed | xargs -I {} grep -l ${line1} /home/junction/{} | sort | uniq | wc -l`
+k_h=`awk -F "\t" '{print$1"_human_splice.bed"}' /home//id/kidney_id.bed | xargs -I {} grep -l ${line1} /home/junction/{} | sort | uniq | wc -l`
+m_h=`awk -F "\t" '{print$1"_human_splice.bed"}' /home/id/muscle_id.bed | xargs -I {} grep -l ${line1} /home/junction/{} | sort | uniq | wc -l`
+pc_h=`awk -F "\t" '{print$1"_human_splice.bed"}' /home/id/prefrontal_cortex_id.bed | xargs -I {} grep -l ${line1} /home/junction/{} | sort | uniq | wc -l`
+pvc_h=`awk -F "\t" '{print$1"_human_splice.bed"}' /home/id/primary_visual_cortex_id.bed | xargs -I {} grep -l ${line1} /home/junction/{} | sort | uniq | wc -l`
+echo -e ${cc_h}"\t"${k_h}"\t"${m_h}"\t"${pc_h}"\t"${pvc_h} >> /home/filter/third/human_count.txt
+done
+library(dplyr)
+library(tidyr)
+h<-read.table("/home/filter/third/human_count.txt",header = F,sep="\t",quote = "",fill = T)
+chu<-h[which(h[,2]>3 | h[,3]>3 | h[,4]>3 | h[,5]>3 | h[,6]>3),]
+write.table(chu,"/home/filter/third/human_count_overhalf.txt",sep="\t",quote=F,row.names=F,col.names=F)
+
+#Focused on dinucleotides
+#Based on "human_count_overhalf.txt" file, add the position and strand information in each species > /home/filter/fourth/human_tmp.txt
+cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="+") print}' | awk -F "\t" '{print $1"\t"$2-3"\t"$2+6"\t"$3}' > /home/filter/fourth/human_donor_plus.bed
+cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-3"\t"$2+18"\t"$3}' > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($3=="+") print}' | awk -F "\t" '{print $1"\t"$2-19"\t"$2+2"\t"$3}' > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-7"\t"$2+2"\t"$3}' > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.bed
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu2.bed
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.bed
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="+" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+6"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="-" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+18"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="+" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-19"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="-" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-7"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="+" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-19"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="-" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-7"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="+" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+6"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="-" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+18"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu2.bed
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.bed
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="+" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+6"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="-" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+18"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="+" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-19"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="-" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-7"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu1.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="+" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-19"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="-" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-7"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="+" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+6"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="-" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+18"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu2.bed
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.bed
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.bed
+
+seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.fa
+seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.fa
+
+seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.fa
+seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.fa
+
+seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.fa
+seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.fa
+
+seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.fa
+seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.fa
+seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.fa
+
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.fa
+seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.fa
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor.fa
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor.fa
+
+cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | sort | uniq > /home/kyoku/data3/run/new/filter/onediff/zhong/human_mess.bed
