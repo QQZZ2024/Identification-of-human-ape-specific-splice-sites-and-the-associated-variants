@@ -302,90 +302,433 @@ chu<-h[which(h[,2]>3 | h[,3]>3 | h[,4]>3 | h[,5]>3 | h[,6]>3),]
 write.table(chu,"/home/filter/third/human_count_overhalf.txt",sep="\t",quote=F,row.names=F,col.names=F)
 
 #Focused on dinucleotides
-#Based on "human_count_overhalf.txt" file, add the position and strand information in each species > /home/filter/fourth/human_tmp.txt
+#Based on "human_count_overhalf.txt" file, add the position and strand information in each species to "/home/filter/fourth/human_tmp.txt"
 cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="+") print}' | awk -F "\t" '{print $1"\t"$2-3"\t"$2+6"\t"$3}' > /home/filter/fourth/human_donor_plus.bed
-cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-3"\t"$2+18"\t"$3}' > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($3=="+") print}' | awk -F "\t" '{print $1"\t"$2-19"\t"$2+2"\t"$3}' > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-7"\t"$2+2"\t"$3}' > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.bed
+cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-3"\t"$2+18"\t"$3}' > /home/filter/fourth/human_acceptor_minus.bed
+cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="+") print}' | awk -F "\t" '{print $1"\t"$2-19"\t"$2+2"\t"$3}' > /home/filter/fourth/human_acceptor_plus.bed
+cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-7"\t"$2+2"\t"$3}' > /home/filter/fourth/human_donor_minus.bed
+cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/filter/fourth/chimp_donor_plus1.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/filter/fourth/chimp_acceptor_minus1.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_acceptor_plus1.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_donor_minus1.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_acceptor_plus2.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_donor_minus2.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/filter/fourth/chimp_donor_plus2.bed
+cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/filter/fourth/chimp_acceptor_minus2.bed
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu2.bed
+#The scripts used for other species were similar
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.bed
+seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_donor_plus.bed > /home/filter/fourth/human_donor_plus.fa
+seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_donor_minus.bed > /home/filter/fourth/human_donor_minus.fa
+seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_acceptor_plus.bed > /home/filter/fourth/human_acceptor_plus.fa
+seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_acceptor_minus.bed > /home/filter/fourth/human_acceptor_minus.fa
+seqtk seq -r /home/filter/fourth/human_donor_minus.fa > /home/filter/fourth/human_donor_plus2.fa
+seqtk seq -r /home/filter/fourth/human_acceptor_minus.fa > /home/filter/fourth/human_acceptor_plus2.fa
+cat /home/filter/fourth/human_donor_plus.fa /home/filter/fourth/human_donor_plus2.fa > /home/filter/fourth/human_donor.fa
+cat /home/filter/fourth/human_acceptor_plus.fa /home/filter/fourth/human_acceptor_plus2.fa > /home/filter/fourth/human_acceptor.fa
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="+" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+6"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="-" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+18"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="+" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-19"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($9=="-" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-7"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="+" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-19"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="-" && $3==$9) print}' | awk -F "\t" '{print $7"\t"$8-7"\t"$8+2"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="+" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+6"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($9=="-" && $3!=$9) print}' | awk -F "\t" '{print $7"\t"$8-3"\t"$8+18"\t"$9}' > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu2.bed
+#The scripts used for other species were similar
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.bed
+library(tidyr)
+library(dplyr)
+hd<-read.table("/home/filter/fourth/human_donor.fa",header = F,sep="\t",quote = "",fill = T)
+ha<-read.table("/home/filter/fourth/human_acceptor.fa",header = F,sep="\t",quote = "",fill = T)
+cd<-read.table("/home/filter/fourth/chimp_donor.fa",header = F,sep="\t",quote = "",fill = T)
+ca<-read.table("/home/filter/fourth/chimp_acceptor.fa",header = F,sep="\t",quote = "",fill = T)
+rd<-read.table("/home/filter/fourth/rhesus_donor.fa",header = F,sep="\t",quote = "",fill = T)
+ra<-read.table("/home/filter/fourth/rhesus_acceptor.fa",header = F,sep="\t",quote = "",fill = T)
+md<-read.table("/home/filter/fourth/mouse_donor.fa",header = F,sep="\t",quote = "",fill = T)
+ma<-read.table("/home/filter/fourth/mouse_acceptor.fa",header = F,sep="\t",quote = "",fill = T)
+all<-read.table("/home/filter/fourth/human_tmp.txt",header = F,sep="\t",quote = "",fill = T)
+id<-as.data.frame(hd[seq(1,nrow(hd),2),])
+seq<-as.data.frame(hd[seq(0,nrow(hd),2),])
+hd1<-cbind(id,seq)
+hd1[,1]<-gsub(">","",hd1[,1])
+colnames(hd1)<-c("a","b")
+hd1<-hd1 %>% separate(a, into = c("chr","pos"), sep = ":")
+hd1<-hd1 %>% separate(pos, into = c("pos1","pos2"), sep = "-")
+hd1$new1<-as.numeric(hd1$pos1) + 2
+hd1$new2<-as.numeric(hd1$pos2) - 2
+id<-as.data.frame(ha[seq(1,nrow(ha),2),])
+seq<-as.data.frame(ha[seq(0,nrow(ha),2),])
+ha1<-cbind(id,seq)
+ha1[,1]<-gsub(">","",ha1[,1])
+colnames(ha1)<-c("a","b")
+ha1<-ha1 %>% separate(a, into = c("chr","pos"), sep = ":")
+ha1<-ha1 %>% separate(pos, into = c("pos1","pos2"), sep = "-")
+ha1$new1<-as.numeric(ha1$pos1) + 2
+ha1$new2<-as.numeric(ha1$pos2) - 2
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="+" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+6"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="-" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+18"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="+" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-19"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt | awk -F "\t" '{if($12=="-" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-7"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu1.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="+" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-19"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="-" && $3==$12) print}' | awk -F "\t" '{print $10"\t"$11-7"\t"$11+2"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="+" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+6"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | awk -F "\t" '{if($12=="-" && $3!=$12) print}' | awk -F "\t" '{print $10"\t"$11-3"\t"$11+18"\t"$12}' > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu2.bed
+#The scripts used for other species were similar
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.bed
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu1.bed /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu2.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.bed
+h<-NULL
+for(i in 1:nrow(hd1)){
+  res1<-all[which(all[,2]==hd1[i,5] & all[,1]==hd1[i,1]),]
+  res2<-all[which(all[,2]==hd1[i,6] & all[,1]==hd1[i,1]),]
+  res<-rbind(res1,res2)
+  if(nrow(res)==1){
+    res3<-cbind(res,hd1[i,1:4])
+  }
+  else{
+    if(res1[1,3]!=res2[1,3]){
+      print(i)
+    }
+    else{
+      if(res1[1,3]=="+"){
+        res<-res1
+        res3<-cbind(res,hd1[i,1:4])
+      }
+      else{
+        res<-res2
+        res3<-cbind(res,hd1[i,1:4])
+      }
+    }
+  }
+  h<-rbind(h,res3)
+}
 
-seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.fa
-seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/human/hg38.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.fa
+for(i in 1:nrow(ha1)){
 
-seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.fa
-seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/chimp/panTro6.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.fa
+  res1<-all[which(all[,2]==ha1[i,5] & all[,1]==ha1[i,1]),]
+  res2<-all[which(all[,2]==ha1[i,6] & all[,1]==ha1[i,1]),]
+  res<-rbind(res1,res2)
+  res3<-cbind(res,ha1[i,1:4])
+  h<-rbind(h,res3)
 
-seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.fa
-seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/rhesus/rheMac10.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.fa
+}
 
-seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.fa
-seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.fa
-seqtk subseq /home/kyoku/data3/genome/mouse/mm39.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.bed > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.fa
+hc<-NULL
+for(i in 1:nrow(cd1)){
 
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.fa
-seqtk seq -r /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_fu.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.fa
+  res1<-h[which(h[,5]==cd1[i,5] & h[,4]==cd1[i,1]),]
+  res2<-h[which(h[,5]==cd1[i,6] & h[,4]==cd1[i,1]),]
+  res<-rbind(res1,res2)
+  if(nrow(res)==1){
+    res3<-cbind(res,cd1[i,1:4])
+  }
+  else{
+    print(i)
+    if(res1[1,6]!=res2[1,6]){
+      print("no")
+    }
+    else{
+      if(res1[1,6]=="+"){
+        res<-res1
+        res3<-cbind(res,cd1[i,1:4])
+      }
+      else{
+        res<-res2
+        res3<-cbind(res,cd1[i,1:4])
+      }
+    }
+  }
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_donor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/human_acceptor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_donor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/chimp_acceptor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_donor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/rhesus_acceptor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_donor.fa
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng.fa /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor_zheng2.fa > /home/kyoku/data3/run/new/filter/onediff/zhong/mouse_acceptor.fa
+  hc<-rbind(hc,res3)
+}
 
-cat /home/kyoku/data3/run/new/filter/onediff/zhong/human_qian_mess.txt /home/kyoku/data3/run/new/filter/onediff/zhong/human_hou_mess.txt | sort | uniq > /home/kyoku/data3/run/new/filter/onediff/zhong/human_mess.bed
+for(i in 1:nrow(ca1)){
+
+  res1<-h[which(h[,5]==ca1[i,5] & h[,4]==ca1[i,1]),]
+  res2<-h[which(h[,5]==ca1[i,6] & h[,4]==ca1[i,1]),]
+  res<-rbind(res1,res2)
+  res3<-cbind(res,ca1[i,1:4])
+  hc<-rbind(hc,res3)
+
+}
+
+hcr<-NULL
+for(i in 1:nrow(rd1)){
+
+  res1<-hc[which(hc[,8]==rd1[i,5] & hc[,7]==rd1[i,1]),]
+  res2<-hc[which(hc[,8]==rd1[i,6] & hc[,7]==rd1[i,1]),]
+  res<-rbind(res1,res2)
+if(nrow(res)==1){
+  res3<-cbind(res,rd1[i,1:4])
+}
+else{
+  print(i)
+  if(res1[1,9]!=res2[1,9]){
+    print("no")
+  }
+  else{
+    if(res1[1,9]=="+"){
+      res<-res1
+      res3<-cbind(res,rd1[i,1:4])
+    }
+    else{
+      res<-res2
+      res3<-cbind(res,rd1[i,1:4])
+    }
+  }
+}
+
+hcr<-rbind(hcr,res3)
+}
+
+for(i in 1:nrow(ra1)){
+
+  res1<-hc[which(hc[,8]==ra1[i,5] & hc[,7]==ra1[i,1]),]
+  res2<-hc[which(hc[,8]==ra1[i,6] & hc[,7]==ra1[i,1]),]
+  res<-rbind(res1,res2)
+  res3<-cbind(res,ra1[i,1:4])
+  hcr<-rbind(hcr,res3)
+
+}
+result<-NULL
+for(i in 1:nrow(md1)){
+
+  res1<-hcr[which(hcr[,11]==md1[i,5] & hcr[,10]==md1[i,1]),]
+  res2<-hcr[which(hcr[,11]==md1[i,6] & hcr[,10]==md1[i,1]),]
+  res<-rbind(res1,res2)
+if(nrow(res)==1){
+  res3<-cbind(res,md1[i,1:4])
+}
+else{
+  print(i)
+  if(res1[1,12]!=res2[1,12]){
+    print(i)
+  }
+  else{
+    if(res1[1,12]=="+"){
+      res<-res1
+      res3<-cbind(res,md1[i,1:4])
+    }
+    else{
+      res<-res2
+      res3<-cbind(res,md1[i,1:4])
+    }
+  }
+}
+
+result<-rbind(result,res3)
+}
+
+
+for(i in 1:nrow(ma1)){
+
+  res1<-hcr[which(hcr[,11]==ma1[i,5] & hcr[,10]==ma1[i,1]),]
+  res2<-hcr[which(hcr[,11]==ma1[i,6] & hcr[,10]==ma1[i,1]),]
+  res<-rbind(res1,res2)
+  res3<-cbind(res,ma1[i,1:4])
+  result<-rbind(result,res3)
+
+}
+
+colnames(result)<-c(letters,"a1","b1")
+library(stringdist)
+scorec<-NULL
+scorer<-NULL
+scorem<-NULL
+for(i in 1:nrow(result)){
+  seq1<-stringdist::stringsim(tolower(result[i,16]),tolower(result[i,20]))
+  seq2<-stringdist::stringsim(tolower(result[i,16]),tolower(result[i,24]))
+  seq3<-stringdist::stringsim(tolower(result[i,16]),tolower(result[i,28]))
+  scorec<-rbind(scorec,seq1)
+  scorer<-rbind(scorer,seq2)
+  scorem<-rbind(scorem,seq3)
+  print(i)
+}
+final<-cbind(result,scorec,scorer,scorem)
+write.table(final,"/home/filter/fourth/human_identity.bed",sep="\t",quote = F,row.names = F,col.names = F)
+
+bedtools intersect -a /home/filter/fourth/human_identity.bed -b /home/gnomad/gnomad.v4.1_af.vcf -wa -wb > /home/filter/fourth/human_af.bed
+
+all1<-read.table("/home/filter/fourth/human_identity.bed",header = F,sep="\t",quote = "",fill = T)
+all<-read.table("/home/filter/fourth/human_af.bed",header = F,sep="\t",quote = "",fill = T)
+
+donor<-all[which(nchar(all[,4])==9),]
+donor[,18]<-gsub("AF=","",donor[,18])
+donor[,18]<-as.numeric(donor[,18])
+donor<-donor[which(donor[,18]>0.1),]
+donor<-donor[which(nchar(donor[,14])==1),]
+donor<-donor[which(nchar(donor[,15])==1),]
+all2<-donor
+
+pin1<-NULL
+for(i in 1:nrow(all2)){
+if(all2[i,10]=="+"){
+res<-all2[i,]
+res2<-all2[i,]
+ins<-all2[i,12]-all2[i,2]+1
+substr(res[1,4],ins,ins)<-res[1,15]
+res$lab<-"mut"
+res2$lab<-"ref"
+res3<-rbind(res,res2)
+} else{
+res<-all2[i,]
+res2<-all2[i,]
+ins<-all2[i,12]-all2[i,2]
+ins<-9-ins
+t<-res[1,15]
+if(t=="C"){
+t<-"G"
+} else if(t=="G"){
+t<-"C"
+} else if(t=="A"){
+t<-"T"
+} else if(t=="T"){
+t<-"A"
+}
+substr(res[1,4],ins,ins)<-t
+res$lab<-"mut"
+res2$lab<-"ref"
+res3<-rbind(res,res2)
+}
+pin1<-rbind(pin1,res3)
+}
+d<-pin1
+
+donor<-all[which(nchar(all[,4])==21),]
+donor[,18]<-gsub("AF=","",donor[,18])
+donor[,18]<-as.numeric(donor[,18])
+donor<-donor[which(donor[,18]>0.1),]
+donor<-donor[which(nchar(donor[,14])==1),]
+donor<-donor[which(nchar(donor[,15])==1),]
+all2<-donor
+pin1<-NULL
+for(i in 1:nrow(all2)){
+if(all2[i,10]=="+"){
+res<-all2[i,]
+res2<-all2[i,]
+ins<-all2[i,12]-all2[i,2]+1
+substr(res[1,4],ins,ins)<-res[1,15]
+res$lab<-"mut"
+res2$lab<-"ref"
+res3<-rbind(res,res2)
+} else{
+res<-all2[i,]
+res2<-all2[i,]
+ins<-all2[i,12]-all2[i,2]
+ins<-21-ins
+t<-res[1,15]
+if(t=="C"){
+t<-"G"
+} else if(t=="G"){
+t<-"C"
+} else if(t=="A"){
+t<-"T"
+} else if(t=="T"){
+t<-"A"
+}
+substr(res[1,4],ins,ins)<-t
+res$lab<-"mut"
+res2$lab<-"ref"
+res3<-rbind(res,res2)
+}
+pin1<-rbind(pin1,res3)
+}
+a<-pin1
+pin1<-rbind(d,a)
+
+pin<-full_join(all1,pin1,by = c("V13"="V1","V14"="V2","V15"="V3"))
+pin<-pin[,c(1:35,39,40,41,42,43,46,47)]
+chimp<-NULL
+for(i in 1:nrow(pin)){
+if(is.na(pin[i,32])){
+  if(pin[i,20]==pin[i,24]){
+  h<-toupper(unlist(strsplit(pin[i,16],split = "")))
+  c<-toupper(unlist(strsplit(pin[i,20],split = "")))
+  pos1<-which(h != c)
+  if(length(pos1)==1){
+  diff1<-data.frame(Position = pos1, string1 = h[pos1], string2 = c[pos1])
+  diff<-cbind(pin[i,],diff1)
+  chimp<-rbind(chimp,diff)
+}
+}
+}
+ else{
+  if(pin[i,20]==pin[i,24]){
+  h<-toupper(unlist(strsplit(pin[i,32],split = "")))
+  c<-toupper(unlist(strsplit(pin[i,33],split = "")))
+  pos1<-which(h != c)
+  if(length(pos1)==1){
+  diff1<-data.frame(Position = pos1, string1 = h[pos1], string2 = c[pos1])
+  diff<-cbind(pin[i,],diff1)
+  chimp<-rbind(chimp,diff)}
+}
+}
+}
+you<-chimp[!is.na(chimp[,32]),]
+you<-you[,c(1:12,13:15,17:19,21:23,25:27,32:45)]
+no<-chimp[is.na(chimp[,32]),]
+no<-no[,c(1:12,13:15,17:19,21:23,25:27,16,20,24,28,43:45)]
+you<-you[,c(1:28,36:38)]
+colnames(you)<-c(letters,"a1","b1","c1","d1","e1")
+colnames(no)<-c(letters,"a1","b1","c1","d1","e1")
+result<-rbind(you,no)
+acc1<-result[which(nchar(result[,25])==21 & result[,29]==18),]
+acc2<-result[which(nchar(result[,25])==21 & result[,29]==17),]
+do1<-result[which(nchar(result[,25])==9 & result[,29]==4),]
+do2<-result[which(nchar(result[,25])==9 & result[,29]==5),]
+
+final<-rbind(acc1,acc2,do1,do2)
+
+pin<-full_join(final,all,by = c("a"="V8","b"="V9","c"="V10"))
+pin$id<-paste(pin[,1],pin[,2],sep="_")
+id<-pin$id
+index<-duplicated(id)
+id<-id[!index]
+shuchu<-NULL
+for(i in 1:length(id)){
+res<-pin[which(pin$id==id[i]),]
+res<-na.omit(res)
+if(nrow(res)>0){
+res[,46]<-gsub("AF=","",res[,46])
+res[,46]<-as.numeric(res[,46])
+if(nchar(res[1,25])==21){
+if(res[1,3]=="+"){
+res$ins<-res[,40]-res[,14]+1
+res<-res[which(res$c1==res$ins),]
+if(nrow(res)>0){
+af1<-sum(res[,46])
+af<-1-af1
+} else{
+af<-1
+}
+} else{
+res$ins<-res[,40]-res[,14]
+res$ins<-21-res$ins
+res<-res[which(res$c1==res$ins),]
+if(nrow(res)>0){
+af1<-sum(res[,46])
+af<-1-af1
+} else{
+af<-1
+}
+}
+} else if(nchar(res[1,25])==9){
+if(res[1,3]=="+"){
+res$ins<-res[,40]-res[,14]+1
+res<-res[which(res$c1==res$ins),]
+if(nrow(res)>0){
+af1<-sum(res[,46])
+af<-1-af1
+} else{
+af<-1
+}
+} else{
+res$ins<-res[,40]-res[,14]
+res$ins<-9-res$ins
+res<-res[which(res$c1==res$ins),]
+if(nrow(res)>0){
+af1<-sum(res[,46])
+af<-1-af1
+} else{
+af<-1
+}
+}
+}
+ti<-pin[which(pin$id==id[i]),c(1:31)]
+ti$af<-af
+} else{
+ti<-pin[which(pin$id==id[i]),c(1:31)]
+ti$af<-1
+}
+shuchu<-rbind(shuchu,ti)
+}
+
+index<-duplicated(shuchu)
+shuchu<-shuchu[!index,]
+shuchu<-na.omit(shuchu)
+
+write.table(shuchu,"/home/kyoku/data3/run/new/filter/onediff/human_onediff_GTAG.txt",sep="\t",quote=F,row.names=F,col.names=F)
