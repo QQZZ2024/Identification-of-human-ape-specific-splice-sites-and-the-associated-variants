@@ -1,4 +1,3 @@
-###Identification of human-specific splice sites
 ###Quality control of RNA-seq data
 
 num=$(cat /home/id/samplesid.txt) #including five tissues-across humans, chimpanzees, rhesus macaques, and mice
