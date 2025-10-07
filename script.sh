@@ -655,4 +655,4 @@ shuchu<-rbind(shuchu,ti)
 index<-duplicated(shuchu)
 shuchu<-shuchu[!index,]
 shuchu<-na.omit(shuchu)
-write.table(shuchu,"/home/filter/fourth/human_onediff.txt",sep="\t",quote=F,row.names=F,col.names=F)
+write.table(shuchu,"/home/filter/fourth/human_specific.txt",sep="\t",quote=F,row.names=F,col.names=F)
