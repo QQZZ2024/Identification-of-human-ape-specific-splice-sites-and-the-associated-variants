@@ -6,7 +6,7 @@ To ensure that only high-quality data were used for downstream analyses, RNA-seq
 2. RNA-seq reads alignment
 We used HISAT2 to align the cleaned reads from each species to the corresponding reference genome (hg38 for human, panTro6 for chimpanzee, rheMac10 for rhesus macaque, and mm39 for mouse).
 
-3.Identify candidate splice site by extracting jucntion reads
+3. Identify candidate splice site by extracting jucntion reads
 We extracted junction reads from the aligned BAM files using samtools and custom shell scripts to identify splice sites utilized in each species.
 
 4. Cross-species genomic coordinate comparisons using LiftOver
