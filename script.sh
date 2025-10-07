@@ -1,3 +1,4 @@
+###Identification of human-specific splice sites
 ###Quality control of RNA-seq data
 
 num=$(cat /home/id/samplesid.txt) #including five tissues-across humans, chimpanzees, rhesus macaques, and mice
@@ -6,16 +7,13 @@ do
 fastp -i /home/fastq/${ID}.fastq -o /home/fastq/${ID}_filter.fastq -h /home/fastq/${ID}_report.html -j /home/fastq/${ID}_report.json -q 30
 done
 
-#####################################################
-
 ###RNA-seq reads alignment
-#build index
+#Build index
 hisat2-build /home/genome/hg38.fa /home/hisat/index/human/human_index
 hisat2-build /home/genome/panTro6.fa /home/hisat/index/chimp/chimp_index
 hisat2-build /home/genome/rheMac10.fa /home/hisat/index/rhesus/rhesus_index
 hisat2-build /home/genome/mm39.fa /home/kyoku/data3/hisat/index/mouse/mouse_index
-
-#such as in human
+#Alignment, such as in human
 num=$(cat /home/id/humanid.txt)
 for ID in $num
 do
@@ -23,26 +21,15 @@ hisat2 -p 4 -x /home/hisat/index/human/human_index -U /home/fastq/${ID}_filter.f
 samtools sort -@ 2 -O bam -o /home/hisat/${ID}_hisat2_human.bam /home/hisat/${ID}_hisat2_human.sam
 done
 
-#The scripts used for other species were similar
-
-#####################################################
-
-###identify candidate splice site by extracting jucntion reads
-#such as in human
+###identify candidate splice site by extracting jucntion reads, such as in human
 num=$(cat /home/id/humanid.txt)
 for ID in $num
 do
 samtools view /home/hisat/${ID}_hisat2_human.bam | awk -F "\t" '{if($6~"^[0-9]*M[0-9]*N[0-9]*M$") print}' | awk -F "\t" '{split ($6,T,"[M-N]");$6=T[1] OFS T[2] OFS T[3]}1' OFS="\t" | awk -F "\t" 'BEGIN{OFS="\t"}{$1=$1"_"FNR;$6=$4+$6-1;$7=$6+$7+1;$8=$7+$8-1}{print $0}' | awk -F "\t" '{print$1"\t"$3"\t"$4"\t"$6"\t"$7"\t"$8}' > /home/junction/${ID}_human.bed
 done
 
-#The scripts used for other species were similar
-
-#####################################################
-
 ###Cross-species genomic coordinate comparisons using LiftOver
-#such as in human
-
-#Convert splice site positions from one species to their orthologous positions in another
+#Convert splice site positions from one species to their orthologous positions in another, such as human to chimpanzee
 num=$(cat /home/id/humanid.txt)
 for ID in $num
 do
@@ -51,25 +38,15 @@ cat /home/junction/${ID}_human.bed | awk -F "\t" '{print $2"\t"$5-5"\t"$5+5}' | 
 bedtools intersect -a /home/junction/${ID}_human_donor.bed -b /home/genome/hg38_trans.gtf -wa -wb | awk -F "\t" '{print $1"\t"$2"\t"$3"\t"$7}' | sort | uniq | awk -F "\t" 'BEGIN{OFS="\t"}{$4=$4"\t""id_"FNR}{print $0}' | awk -F "\t" '{print $1"\t"$2"\t"$3"\t"$5"\t""100""\t"$4}' > /home/junction/${ID}_human_donor_gene.bed
 bedtools intersect -a /home/junction/${ID}_human_acceptor.bed -b /home/genome/hg38_trans.gtf -wa -wb | awk -F "\t" '{print $1"\t"$2"\t"$3"\t"$7}' | sort | uniq | awk -F "\t" 'BEGIN{OFS="\t"}{$4=$4"\t""id_"FNR}{print $0}' | awk -F "\t" '{print $1"\t"$2"\t"$3"\t"$5"\t""100""\t"$4}' > /home/junction/${ID}_human_acceptor_gene.bed
 liftOver /home/junction/${ID}_human_donor_gene.bed /home/liftover/hg38ToPanTro6.over.chain.gz /home/liftover/${ID}_human_chimp_donor.bed unMapped
-liftOver /home/junction/${ID}_human_donor_gene.bed /home/liftover/hg38ToRheMac10.over.chain.gz /home/liftover/${ID}_human_rhesus_donor.bed unMapped
-liftOver /home/junction/${ID}_human_donor_gene.bed /home/liftover/hg38ToMm39.over.chain.gz /home/liftover/${ID}_human_mouse_donor.bed unMapped
 liftOver /home/junction/${ID}_human_acceptor_gene.bed /home/liftover/hg38ToPanTro6.over.chain.gz /home/liftover/${ID}_human_chimp_acceptor.bed unMapped
-liftOver /home/junction/${ID}_human_acceptor_gene.bed /home/liftover/hg38ToRheMac10.over.chain.gz /home/liftover/${ID}_human_rhesus_acceptor.bed unMapped
-liftOver /home/junction/${ID}_human_acceptor_gene.bed /home/liftover/hg38ToMm39.over.chain.gz /home/liftover/${ID}_human_mouse_acceptor.bed unMapped
 done
-
-#Convert positions back to the original genome
+#Convert positions back to the original genome, such as chimpanzee back to human
 num=$(cat /home/id/humanid.txt)
 for ID in $num
 do
 liftOver /home/liftover/${ID}_human_chimp_donor.bed /home/liftover/panTro6ToHg38.over.chain.gz /home/liftover/back/${ID}_human_chimp_donor.bed unMapped
-liftOver /home/liftover/${ID}_human_rhesus_donor.bed /home/liftover/rheMac10ToHg38.over.chain.gz /home/liftover/back/${ID}_human_rhesus_donor.bed unMapped
-liftOver /home/liftover/${ID}_human_mouse_donor.bed /home/liftover/mm39ToHg38.over.chain.gz /home/liftover/back/${ID}_human_mouse_donor.bed unMapped
 liftOver /home/liftover/${ID}_human_chimp_acceptor.bed /home/liftover/panTro6ToHg38.over.chain.gz /home/liftover/back/${ID}_human_chimp_acceptor.bed unMapped
-liftOver /home/liftover/${ID}_human_rhesus_acceptor.bed /home/liftover/rheMac10ToHg38.over.chain.gz /home/liftover/back/${ID}_human_rhesus_acceptor.bed unMapped
-liftOver /home/liftover/${ID}_human_mouse_acceptor.bed /home/liftover/mm39ToHg38.over.chain.gz /home/liftover/back/${ID}_human_mouse_acceptor.bed unMapped
 done
-
 #Retain only the splice sites with consistent positions in both forward and reverse mappings
 num=$(cat /home/kyoku/data3/run/id/humanid.txt)
 for ID in $num
@@ -88,17 +65,11 @@ awk -F "\t" 'NR==FNR{a[$4]=$0;next}{$14=a[$4];print}' /home/liftover/${ID}_human
 awk -F "\t" 'NR==FNR{a[$4]=$0;next}{$18=a[$4];print}' /home/liftover/back/${ID}_human_mouse_acceptor.bed /home/liftover/retain/${ID}_tmp5.bed |  tr ' ' '\t' | awk -F "\t" '{if($1==$18 && $2==$19 && $3==$20) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12"\t"$13"\t"$14"\t"$15"\t"$16"\t"$17}' > /home/liftover/retain/${ID}_human_acceptor.bed
 done
 
-#The scripts used for other species were similar
-
-#####################################################
-
 ###identify candidate species-specific splice sites
-#such as in human
 cat /home/liftover/retain/*_human_donor.bed| sort | uniq > /home/splice/human_donor.bed
 cat /home/liftover/retain/*_human_acceptor.bed | sort | uniq > /home/splice/human_acceptor.bed
 cat /home/junction/*_human.bed | awk -F "\t" '{print$2"\t"$4}' | sort | uniq > /home/junction/allhuman_donor.bed
 cat /home/junction/*_human.bed | awk -F "\t" '{print$2"\t"$5}' | sort | uniq > /home/junction/allhuman_acceptor.bed
-
 #The scripts used for other species were similar
 
 library(dplyr)
@@ -148,7 +119,6 @@ res_hc$lab3<-"mouse"
 res_hc2$lab3<-"nomouse"
 human<-rbind(res_hc,res_hc2)
 write.table(human,"/home/specific/human.bed",sep="\t",quote=F,row.names=F,col.names=F)
-
 #The scripts used for other species were similar
 
 human<-read.table("/home/specific/human.bed",header = F,sep="\t",quote = "",fill = T)
@@ -182,8 +152,6 @@ h<-pin4[which(pin4$lab=="human_nochimp_norhesus_nomouse"),1:4]
 inter<-pin4[which(pin4$lab=="human_chimp_norhesus_nomouse"),1:4]
 write.table(h,"/home/specific/human_specific.txt",sep="\t",quote=F,row.names=F,col.names=F)
 write.table(inter,"/home/specific/ape_specific.txt",sep="\t",quote=F,row.names=F,col.names=F)
-
-#####################################################
 
 ###Pipeline for filtering species-specific splice sites
 #One side of the jucntion reads is annotated
@@ -307,17 +275,6 @@ cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="+") print}' | awk 
 cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-3"\t"$2+18"\t"$3}' > /home/filter/fourth/human_acceptor_minus.bed
 cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="+") print}' | awk -F "\t" '{print $1"\t"$2-19"\t"$2+2"\t"$3}' > /home/filter/fourth/human_acceptor_plus.bed
 cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($3=="-") print}' | awk -F "\t" '{print $1"\t"$2-7"\t"$2+2"\t"$3}' > /home/filter/fourth/human_donor_minus.bed
-cat /home/filter/fourth/human_tmp.txt | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/filter/fourth/chimp_donor_plus1.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/filter/fourth/chimp_acceptor_minus1.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_acceptor_plus1.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_donor_minus1.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="+" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-19"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_acceptor_plus2.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3==$6) print}' | awk -F "\t" '{print $4"\t"$5-7"\t"$5+2"\t"$6}' > /home/filter/fourth/chimp_donor_minus2.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="+" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+6"\t"$6}' > /home/filter/fourth/chimp_donor_plus2.bed
-cat /home/filter/fourth/human_tmp.txt  | awk -F "\t" '{if($6=="-" && $3!=$6) print}' | awk -F "\t" '{print $4"\t"$5-3"\t"$5+18"\t"$6}' > /home/filter/fourth/chimp_acceptor_minus2.bed
-
-#The scripts used for other species were similar
-
 seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_donor_plus.bed > /home/filter/fourth/human_donor_plus.fa
 seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_donor_minus.bed > /home/filter/fourth/human_donor_minus.fa
 seqtk subseq /home/genome/hg38.fa /home/filter/fourth/human_acceptor_plus.bed > /home/filter/fourth/human_acceptor_plus.fa
@@ -326,7 +283,6 @@ seqtk seq -r /home/filter/fourth/human_donor_minus.fa > /home/filter/fourth/huma
 seqtk seq -r /home/filter/fourth/human_acceptor_minus.fa > /home/filter/fourth/human_acceptor_plus2.fa
 cat /home/filter/fourth/human_donor_plus.fa /home/filter/fourth/human_donor_plus2.fa > /home/filter/fourth/human_donor.fa
 cat /home/filter/fourth/human_acceptor_plus.fa /home/filter/fourth/human_acceptor_plus2.fa > /home/filter/fourth/human_acceptor.fa
-
 #The scripts used for other species were similar
 
 library(tidyr)
@@ -358,9 +314,7 @@ ha1<-ha1 %>% separate(a, into = c("chr","pos"), sep = ":")
 ha1<-ha1 %>% separate(pos, into = c("pos1","pos2"), sep = "-")
 ha1$new1<-as.numeric(ha1$pos1) + 2
 ha1$new2<-as.numeric(ha1$pos2) - 2
-
 #The scripts used for other species were similar
-
 h<-NULL
 for(i in 1:nrow(hd1)){
   res1<-all[which(all[,2]==hd1[i,5] & all[,1]==hd1[i,1]),]
@@ -386,20 +340,15 @@ for(i in 1:nrow(hd1)){
   }
   h<-rbind(h,res3)
 }
-
 for(i in 1:nrow(ha1)){
-
   res1<-all[which(all[,2]==ha1[i,5] & all[,1]==ha1[i,1]),]
   res2<-all[which(all[,2]==ha1[i,6] & all[,1]==ha1[i,1]),]
   res<-rbind(res1,res2)
   res3<-cbind(res,ha1[i,1:4])
   h<-rbind(h,res3)
-
 }
-
 hc<-NULL
 for(i in 1:nrow(cd1)){
-
   res1<-h[which(h[,5]==cd1[i,5] & h[,4]==cd1[i,1]),]
   res2<-h[which(h[,5]==cd1[i,6] & h[,4]==cd1[i,1]),]
   res<-rbind(res1,res2)
@@ -425,20 +374,15 @@ for(i in 1:nrow(cd1)){
 
   hc<-rbind(hc,res3)
 }
-
 for(i in 1:nrow(ca1)){
-
   res1<-h[which(h[,5]==ca1[i,5] & h[,4]==ca1[i,1]),]
   res2<-h[which(h[,5]==ca1[i,6] & h[,4]==ca1[i,1]),]
   res<-rbind(res1,res2)
   res3<-cbind(res,ca1[i,1:4])
   hc<-rbind(hc,res3)
-
 }
-
 hcr<-NULL
 for(i in 1:nrow(rd1)){
-
   res1<-hc[which(hc[,8]==rd1[i,5] & hc[,7]==rd1[i,1]),]
   res2<-hc[which(hc[,8]==rd1[i,6] & hc[,7]==rd1[i,1]),]
   res<-rbind(res1,res2)
@@ -461,22 +405,17 @@ else{
     }
   }
 }
-
 hcr<-rbind(hcr,res3)
 }
-
 for(i in 1:nrow(ra1)){
-
   res1<-hc[which(hc[,8]==ra1[i,5] & hc[,7]==ra1[i,1]),]
   res2<-hc[which(hc[,8]==ra1[i,6] & hc[,7]==ra1[i,1]),]
   res<-rbind(res1,res2)
   res3<-cbind(res,ra1[i,1:4])
   hcr<-rbind(hcr,res3)
-
 }
 result<-NULL
 for(i in 1:nrow(md1)){
-
   res1<-hcr[which(hcr[,11]==md1[i,5] & hcr[,10]==md1[i,1]),]
   res2<-hcr[which(hcr[,11]==md1[i,6] & hcr[,10]==md1[i,1]),]
   res<-rbind(res1,res2)
@@ -499,21 +438,15 @@ else{
     }
   }
 }
-
 result<-rbind(result,res3)
 }
-
-
 for(i in 1:nrow(ma1)){
-
   res1<-hcr[which(hcr[,11]==ma1[i,5] & hcr[,10]==ma1[i,1]),]
   res2<-hcr[which(hcr[,11]==ma1[i,6] & hcr[,10]==ma1[i,1]),]
   res<-rbind(res1,res2)
   res3<-cbind(res,ma1[i,1:4])
   result<-rbind(result,res3)
-
 }
-
 colnames(result)<-c(letters,"a1","b1")
 library(stringdist)
 scorec<-NULL
@@ -531,11 +464,11 @@ for(i in 1:nrow(result)){
 final<-cbind(result,scorec,scorer,scorem)
 write.table(final,"/home/filter/fourth/human_identity.bed",sep="\t",quote = F,row.names = F,col.names = F)
 
+#Retain the variants with AF >0.1 as candidate variants associated with the identified splice-site usage
 bedtools intersect -a /home/filter/fourth/human_identity.bed -b /home/gnomad/gnomad.v4.1_af.vcf -wa -wb > /home/filter/fourth/human_af.bed
 
 all1<-read.table("/home/filter/fourth/human_identity.bed",header = F,sep="\t",quote = "",fill = T)
 all<-read.table("/home/filter/fourth/human_af.bed",header = F,sep="\t",quote = "",fill = T)
-
 donor<-all[which(nchar(all[,4])==9),]
 donor[,18]<-gsub("AF=","",donor[,18])
 donor[,18]<-as.numeric(donor[,18])
@@ -543,7 +476,6 @@ donor<-donor[which(donor[,18]>0.1),]
 donor<-donor[which(nchar(donor[,14])==1),]
 donor<-donor[which(nchar(donor[,15])==1),]
 all2<-donor
-
 pin1<-NULL
 for(i in 1:nrow(all2)){
 if(all2[i,10]=="+"){
@@ -577,7 +509,6 @@ res3<-rbind(res,res2)
 pin1<-rbind(pin1,res3)
 }
 d<-pin1
-
 donor<-all[which(nchar(all[,4])==21),]
 donor[,18]<-gsub("AF=","",donor[,18])
 donor[,18]<-as.numeric(donor[,18])
@@ -619,7 +550,6 @@ pin1<-rbind(pin1,res3)
 }
 a<-pin1
 pin1<-rbind(d,a)
-
 pin<-full_join(all1,pin1,by = c("V13"="V1","V14"="V2","V15"="V3"))
 pin<-pin[,c(1:35,39,40,41,42,43,46,47)]
 chimp<-NULL
@@ -660,9 +590,7 @@ acc1<-result[which(nchar(result[,25])==21 & result[,29]==18),]
 acc2<-result[which(nchar(result[,25])==21 & result[,29]==17),]
 do1<-result[which(nchar(result[,25])==9 & result[,29]==4),]
 do2<-result[which(nchar(result[,25])==9 & result[,29]==5),]
-
 final<-rbind(acc1,acc2,do1,do2)
-
 pin<-full_join(final,all,by = c("a"="V8","b"="V9","c"="V10"))
 pin$id<-paste(pin[,1],pin[,2],sep="_")
 id<-pin$id
@@ -726,9 +654,7 @@ ti$af<-1
 }
 shuchu<-rbind(shuchu,ti)
 }
-
 index<-duplicated(shuchu)
 shuchu<-shuchu[!index,]
 shuchu<-na.omit(shuchu)
-
-write.table(shuchu,"/home/kyoku/data3/run/new/filter/onediff/human_onediff_GTAG.txt",sep="\t",quote=F,row.names=F,col.names=F)
+write.table(shuchu,"/home/filter/fourth/human_onediff.txt",sep="\t",quote=F,row.names=F,col.names=F)
