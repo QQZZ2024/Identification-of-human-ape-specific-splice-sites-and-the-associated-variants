@@ -20,7 +20,7 @@ hisat2 -p 4 -x /home/hisat/index/human/human_index -U /home/fastq/${ID}_filter.f
 samtools sort -@ 2 -O bam -o /home/hisat/${ID}_hisat2_human.bam /home/hisat/${ID}_hisat2_human.sam
 done
 
-###identify candidate splice site by extracting jucntion reads, such as in human
+###Identify candidate splice site by extracting jucntion reads, such as in human
 num=$(cat /home/id/humanid.txt)
 for ID in $num
 do
@@ -64,7 +64,7 @@ awk -F "\t" 'NR==FNR{a[$4]=$0;next}{$14=a[$4];print}' /home/liftover/${ID}_human
 awk -F "\t" 'NR==FNR{a[$4]=$0;next}{$18=a[$4];print}' /home/liftover/back/${ID}_human_mouse_acceptor.bed /home/liftover/retain/${ID}_tmp5.bed |  tr ' ' '\t' | awk -F "\t" '{if($1==$18 && $2==$19 && $3==$20) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$12"\t"$13"\t"$14"\t"$15"\t"$16"\t"$17}' > /home/liftover/retain/${ID}_human_acceptor.bed
 done
 
-###identify candidate species-specific splice sites
+###Identify candidate species-specific splice sites
 cat /home/liftover/retain/*_human_donor.bed| sort | uniq > /home/splice/human_donor.bed
 cat /home/liftover/retain/*_human_acceptor.bed | sort | uniq > /home/splice/human_acceptor.bed
 cat /home/junction/*_human.bed | awk -F "\t" '{print$2"\t"$4}' | sort | uniq > /home/junction/allhuman_donor.bed
